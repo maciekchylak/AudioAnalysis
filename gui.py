@@ -1,5 +1,7 @@
 import sys
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget
+
 
 from sound_functions import *
 
@@ -13,6 +15,9 @@ class MainMenu(QWidget):
         self.resize(300, 300)
         self.setWindowTitle('Analiza dźwięku')
         self.show()
+
+
+# class PlotWindow(QtWidgets, QMainWindow):
 
 if __name__ == '__main__':
     
