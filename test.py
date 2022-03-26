@@ -5,12 +5,12 @@ from sound_functions import *
 
 import numpy as np
 
-samplerate, data =  read_wav('./Znormalizowane/gyr.wav')
-print(len(data))
-length = len(data) / samplerate
-print(length)
-print(np.linspace(0., length, data.shape[0]))
+samplerate, data =  read_wav('gyr.wav', 'Maciej')
 
 print(volume(data))
 
-print(zero_crossing_rate(data, samplerate))
+print(volume_dynamic_range('Maciej'))
+print(energy_entropy('Maciej', 10))
+print(standard_deviation_of_zcr('Maciej'))
+
+print(VSTD('Maciej'))
