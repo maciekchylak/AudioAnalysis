@@ -37,32 +37,26 @@ def read_all_wav_files(imie):
 
     return output_list
 
-def time_waveform(samplerate, data):
-    length = len(data) / samplerate
-    time = np.linspace(0., length, data.shape[0])
-
-    plt.plot(time, data, label="Left channel")
-    plt.legend()
-    plt.xlabel("Time [s]")
-    plt.ylabel("Amplitude")
-    plt.show()
-
-def volume(data):
+def volume(filename, imie):
+    _, data = read_wav(filename, imie)
     output = 0
     for el in data:
         output += float(el) ** 2
     return math.sqrt(output / len(data))
 
-def energy(data):
+def energy(filename, imie):
+    _, data = read_wav(filename, imie)
     output = 0
     for el in data:
         output += float(el) ** 2
     return output
 
-def short_time_energy(data):
+def short_time_energy(filename, imie):
+    _, data = read_wav(filename, imie)
     return volume(data) ** 2
 
-def zero_crossing_rate(data, samplerate):
+def zero_crossing_rate(filename, imie):
+    samplerate, data = read_wav(filename, imie)
     output = 0
     for i in range(1, len(data)):
         output += abs(
@@ -71,7 +65,7 @@ def zero_crossing_rate(data, samplerate):
     return (output * samplerate) / (len(data) * 2)
 
 #TODO
-def silent_ratio(data):
+def silent_ratio(data, filename):
     pass
 
 def autocorelation(data, l):
@@ -89,7 +83,7 @@ def average_magnitude_difference_function(data, l):
     return output
 
 #TODO
-def fundemental_frequency(data):
+def fundemental_frequency(data, filename):
     pass
 
 

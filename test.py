@@ -6,6 +6,8 @@ from sound_functions import *
 import numpy as np
 
 samplerate, data =  read_wav('gyr.wav', 'Maciej')
+print(data)
+print(samplerate)
 
 print(volume(data))
 
