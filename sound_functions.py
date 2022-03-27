@@ -10,15 +10,14 @@ from conf import *
 ### Frame level functions
 def read_wav(filename, imie):
     if imie == 'Maciej':
-        path = './samples/Maciej_Chylak/Znormalizowane'
+        key_dict = 'Maciej_' + filename
     elif imie == 'Dawid':
-        path = './samples/Dawid_Janus/Znormalizowane'
+        key_dict = 'Dawid_' + filename
     else:
         return None
 
-    path = path + '/' + filename
+    return samplerate_dict[key_dict], data_dict[key_dict]
 
-    return wavfile.read(path)
 
 def files_imie(imie):
     if imie == 'Maciej':

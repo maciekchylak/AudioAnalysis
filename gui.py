@@ -100,6 +100,13 @@ class PlotMenu(QWidget):
         if self.imie == 'Dawid':
             self.choose_file.addItems(all_filenames_d)
         
+        self.main_plot = QWidget()
+        self.main_plot_layout = QGridLayout()
+
+        self.plot_generate()
+
+        self.choose_file.activated.connect(self.generate_plots_statistics)
+
         button_back = QPushButton('Back', self)
         button_back.clicked.connect(self.go_back)
         self.back_layout = QHBoxLayout()
@@ -108,49 +115,39 @@ class PlotMenu(QWidget):
         self.back_layout.addStretch(6)
         self.back_layout.addWidget(button_back)
 
-        self.main_plot = QWidget()
-        self.main_plot_layout = QGridLayout()
-        self.sc, self.toolbar = self.waveform(str(self.choose_file.currentText()))
-        self.main_plot_layout.addWidget(self.toolbar, 0, 0)
-        self.main_plot_layout.addWidget(self.sc, 1, 0)
-        self.main_plot_layout.addLayout(self.back_layout, 2, 0)
+        self.main_plot_layout.addLayout(self.back_layout, 1, 0)
 
-        self.choose_file.activated.connect(self.generate_plots_statistics)
-        
         self.main_plot.setLayout(self.main_plot_layout)
         self.tabs.addTab(self.main_plot, 'Waveform')
     
+    def plot_generate(self):
+        self.plot_toolbar_widget = QWidget()
+        self.plot_toolbar_layout = QGridLayout()
+        self.sc, self.toolbar = self.waveform(str(self.choose_file.currentText()))
+
+        self.plot_toolbar_layout.addWidget(self.toolbar, 0, 0)
+        self.plot_toolbar_layout.addWidget(self.sc, 1, 0)
+        self.plot_toolbar_widget.setLayout(self.plot_toolbar_layout)
+
+        self.main_plot_layout.addWidget(self.plot_toolbar_widget, 0, 0)
+
     def features(self):
-
-        def _label_element(text, function, filename, frame = True, K = -1):
-            widget = QWidget()
-            layout = QVBoxLayout()
-
-            label = QLabel()
-            label.setText(text)
-            label.setAlignment(QtCore.Qt.AlignCenter)
-            label.setFont(QFont('Arial', 12, weight=100))
-
-            output = QLabel()
-            if frame and K == -1:
-                output.setText(str(function(filename, self.imie)))
-            elif not frame and K == -1:
-                output.setText(str(function(self.imie)))
-            elif K != -1:
-                output.setText(str(function(self.imie, K)))
-            output.setAlignment(QtCore.Qt.AlignCenter)
-            output.setFont(QFont('Arial', 8))
-
-            layout.addWidget(label, alignment=QtCore.Qt.AlignBottom)
-            layout.addWidget(output, alignment=QtCore.Qt.AlignTop)
-
-            widget.setLayout(layout)
-
-            return widget
         
         self.main_features = QWidget()
-        self.main_features_layout = QVBoxLayout()
+        self.main_features_layout = QGridLayout()
 
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+
+        self.frame_statistics()
+        self.main_features_layout.addWidget(line, 1, 0)
+        self.clip_statistics()
+
+        self.main_features.setLayout(self.main_features_layout)
+        self.tabs.addTab(self.main_features, 'Features')
+
+    def frame_statistics(self):
         self.frame = QWidget()
         self.frame_layout = QGridLayout()
         frame_title = QLabel()
@@ -159,13 +156,16 @@ class PlotMenu(QWidget):
         frame_title.setFont(QFont('Arial', 20))
 
         self.frame_layout.addWidget(frame_title, 0, 0, 1, 0)
-        self.frame_layout.addWidget(_label_element('Volume', volume, self.choose_file.currentText()), 1, 0)
-        self.frame_layout.addWidget(_label_element('Energy', energy, self.choose_file.currentText()), 1, 1)
-        self.frame_layout.addWidget(_label_element('STE', short_time_energy, self.choose_file.currentText()), 2, 0)
-        self.frame_layout.addWidget(_label_element('ZCR', zero_crossing_rate, self.choose_file.currentText()), 2, 1)
-        self.frame_layout.addWidget(_label_element('Fundamental Frequency', short_time_energy, self.choose_file.currentText()), 3, 0, 1, 2)
+        self.frame_layout.addWidget(self.label_element('Volume', volume, self.choose_file.currentText()), 1, 0)
+        self.frame_layout.addWidget(self.label_element('Energy', energy, self.choose_file.currentText()), 1, 1)
+        self.frame_layout.addWidget(self.label_element('STE', short_time_energy, self.choose_file.currentText()), 2, 0)
+        self.frame_layout.addWidget(self.label_element('ZCR', zero_crossing_rate, self.choose_file.currentText()), 2, 1)
+        self.frame_layout.addWidget(self.label_element('Fundamental Frequency', short_time_energy, self.choose_file.currentText()), 3, 0, 1, 2)
         self.frame.setLayout(self.frame_layout)
 
+        self.main_features_layout.addWidget(self.frame, 0, 0)
+
+    def clip_statistics(self):
         self.clip = QWidget()
         self.clip_layout = QGridLayout()
         clip_title = QLabel()
@@ -174,43 +174,50 @@ class PlotMenu(QWidget):
         clip_title.setFont(QFont('Arial', 20))
 
         self.clip_layout.addWidget(clip_title, 4, 0, 1, 0)
-        self.clip_layout.addWidget(_label_element('VSTD', VSTD, self.choose_file.currentText(), False), 5, 0)
-        self.clip_layout.addWidget(_label_element('VDR', volume_dynamic_range, self.choose_file.currentText(), False), 5, 1)
-        self.clip_layout.addWidget(_label_element('VU', volume_dynamic_range, self.choose_file.currentText(), False), 5, 2)
-        self.clip_layout.addWidget(_label_element('LSTER', low_short_time_energy_ratio, self.choose_file.currentText(), False), 6, 0)
-        self.clip_layout.addWidget(_label_element('ZSTD', standard_deviation_of_zcr, self.choose_file.currentText(), False), 6, 1)
-        self.clip_layout.addWidget(_label_element('HZCRR', high_zero_crossing_rate_ratio, self.choose_file.currentText(), False), 6, 2)
-        self.clip_layout.addWidget(_label_element('Energy Entropy', energy_entropy, self.choose_file.currentText(), False, 100), 7, 0, 1, 3)
+        self.clip_layout.addWidget(self.label_element('VSTD', VSTD, self.choose_file.currentText(), False), 5, 0)
+        self.clip_layout.addWidget(self.label_element('VDR', volume_dynamic_range, self.choose_file.currentText(), False), 5, 1)
+        self.clip_layout.addWidget(self.label_element('VU', volume_dynamic_range, self.choose_file.currentText(), False), 5, 2)
+        self.clip_layout.addWidget(self.label_element('LSTER', low_short_time_energy_ratio, self.choose_file.currentText(), False), 6, 0)
+        self.clip_layout.addWidget(self.label_element('ZSTD', standard_deviation_of_zcr, self.choose_file.currentText(), False), 6, 1)
+        self.clip_layout.addWidget(self.label_element('HZCRR', high_zero_crossing_rate_ratio, self.choose_file.currentText(), False), 6, 2)
+        self.clip_layout.addWidget(self.label_element('Energy Entropy', energy_entropy, self.choose_file.currentText(), False, 100), 7, 0, 1, 3)
         self.clip.setLayout(self.clip_layout)
 
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
+        self.main_features_layout.addWidget(self.clip, 2, 0)
 
-        self.main_features_layout.addWidget(self.frame)
-        self.main_features_layout.addWidget(line)
-        self.main_features_layout.addWidget(self.clip)
+    def label_element(self, text, function, filename, frame = True, K = -1):
+        widget = QWidget()
+        layout = QVBoxLayout()
 
-        self.main_features.setLayout(self.main_features_layout)
-        self.tabs.addTab(self.main_features, 'Features')
+        label = QLabel()
+        label.setText(text)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setFont(QFont('Arial', 12, weight=100))
 
+        output = QLabel()
+        if frame and K == -1:
+            output.setText(str(function(filename, self.imie)))
+        elif not frame and K == -1:
+            output.setText(str(function(self.imie)))
+        elif K != -1:
+            output.setText(str(function(self.imie, K)))
+        output.setAlignment(QtCore.Qt.AlignCenter)
+        output.setFont(QFont('Arial', 8))
 
+        layout.addWidget(label, alignment=QtCore.Qt.AlignBottom)
+        layout.addWidget(output, alignment=QtCore.Qt.AlignTop)
+
+        widget.setLayout(layout)
+
+        return widget
 
     def generate_plots_statistics(self, _):
-        filename = str(self.choose_file.currentText())
-        self.main_plot_layout.removeWidget(self.sc)
-        self.main_plot_layout.removeWidget(self.toolbar)
 
-        self.sc, self.toolbar = self.waveform(filename)
-        self.main_plot_layout.addWidget(self.toolbar, 0, 0)
-        self.main_plot_layout.addWidget(self.sc, 1, 0)
-        
-        
-        self.main_plot.setLayout(self.main_plot_layout)
-        self.tabs.removeTab(1)
-        self.tabs.removeTab(0)
-        self.tabs.addTab(self.main_plot, 'Waveform')
-        self.features()
+        self.main_plot_layout.removeWidget(self.plot_toolbar_widget)     
+        self.plot_generate()
+
+        self.main_features_layout.removeWidget(self.frame)
+        self.frame_statistics()
 
 
     def waveform(self, filename):
