@@ -6,13 +6,12 @@ from sound_functions import *
 import numpy as np
 
 samplerate, data =  read_wav('gyr.wav', 'Maciej')
-print(data)
-print(samplerate)
+samplerate, data = read_wav_clip('gyr.wav', 'Maciej')
 
-print(volume(data))
+v = volume('zdanie.wav', 'Maciej')
+z = zero_crossing_rate('zdanie.wav', 'Maciej')
+index_min_v = v.index(min(v))
+print(v[index_min_v])
+print(z[index_min_v])
 
-print(volume_dynamic_range('Maciej'))
-print(energy_entropy('Maciej', 10))
-print(standard_deviation_of_zcr('Maciej'))
-
-print(VSTD('Maciej'))
+print(low_short_time_energy_ratio('zdanie.wav', 'Maciej'))

@@ -1,4 +1,5 @@
 ### There will be defined all sound functions
+import statistics
 import math
 
 import numpy as np
@@ -6,6 +7,8 @@ from scipy.io import wavfile
 import matplotlib.pyplot as plt
 
 from conf import *
+
+
 
 ### Frame level functions
 def read_wav(filename, imie):
@@ -18,37 +21,20 @@ def read_wav(filename, imie):
 
     return samplerate_dict[key_dict], data_dict[key_dict]
 
-
-def files_imie(imie):
-    if imie == 'Maciej':
-        all_filenames = all_filenames_m
-    elif imie == 'Dawid':
-        all_filenames = all_filenames_d
-    return all_filenames
-
-def read_all_wav_files(imie):
-    output_list = [[], []]
-    
-    if imie == 'Maciej':
-        all_filenames = all_filenames_m
-    elif imie == 'Dawid':
-        all_filenames = all_filenames_d
-    else:
-        return None
-    
-    for file in all_filenames:
-        fs, data = read_wav(file, imie)
-        output_list[0].append(fs)
-        output_list[1].append(data)
-
-    return output_list
+def read_wav_clip(filename, imie):
+    samplerate, data = read_wav(filename, imie)
+    return samplerate, flatten(data)
 
 def volume(filename, imie):
     _, data = read_wav(filename, imie)
-    output = 0
-    for el in data:
-        output += float(el) ** 2
-    return math.sqrt(output / len(data))
+    output = []
+    for frame in data:
+        volume = 0
+        for sample in frame:
+            volume += float(sample) ** 2
+        output.append(math.sqrt(volume) / len(frame))
+
+    return [(el - min(output)) / (max(output) - min(output)) for el in output]
 
 def energy(filename, imie):
     _, data = read_wav(filename, imie)
@@ -64,33 +50,38 @@ def energy_data(data):
     return output
 
 def short_time_energy(filename, imie):
-    return volume(filename, imie) ** 2
+    return [el ** 2 for el in volume(filename, imie)]
 
 def zero_crossing_rate(filename, imie):
     samplerate, data = read_wav(filename, imie)
-    output = 0
-    for i in range(1, len(data)):
-        output += abs(
-                            np.sign(float(data[i])) - np.sign(float(data[i - 1]))
-                        )
-    return (output * samplerate) / (len(data) * 2)
+    output = []
+    for frame in data:
+        zero_crossing_rate = 0
+        for i in range(1, len(frame)):
+            zero_crossing_rate += abs(
+                                np.sign(float(frame[i])) - np.sign(float(frame[i - 1]))
+                            )
+        output.append(int((zero_crossing_rate * samplerate / (len(frame) * 2))))
+    return output
 
-#TODO
-def silent_ratio(data, filename):
-    pass
+def silent_ratio(filename, imie):
+    v = volume(filename, imie)
+    zcr = zero_crossing_rate(filename, imie)
+
+    return [1 if v[i] < 0.02 and zcr[i] < 200 else 0 for i in range(len(v))]
 
 def autocorelation(data, l):
     output = 0
     for i in range(len(data) - l):
         output += data[i] * data[i + l]
-   
+
     return output
 
 def average_magnitude_difference_function(data, l):
     output = 0
     for i in range(len(data) - l):
         output += abs(data[i + l] - data[i])
-   
+
     return output
 
 #TODO
@@ -99,64 +90,81 @@ def fundemental_frequency(data, filename):
 
 
 ### Clip level functions
-def VSTD(imie):
-    all_wav_files = files_imie(imie)
+def VSTD(filename, imie):
 
-    list_of_volumes = [volume(file, imie) for file in all_wav_files]
-    max_volume = max(list_of_volumes)
-    list_of_volumes_norm = [el / max_volume for el in list_of_volumes]
+    volumes = volume(filename, imie)
 
-    return np.std(list_of_volumes_norm)
+    return np.std(volumes)
 
-def volume_dynamic_range(imie):
-    list_of_volumes = []
-    all_wav_files = files_imie(imie)
-    
-    for el in all_wav_files:
-        list_of_volumes.append(volume(el, imie))
-    return (max(list_of_volumes) - min(list_of_volumes)) / max(list_of_volumes)
+def volume_dynamic_range(filename, imie):
+
+    volumes = volume(filename, imie)
+
+    return (max(volumes) - min(volumes)) / max(volumes)
 
 #TODO
 def volume_undulation():
     pass
 
 ### Energy level functions
-def low_short_time_energy_ratio(imie):
-    all_wav_files = files_imie(imie)
-    N = len(all_wav_files)
-    output = 0
-    for el in all_wav_files:
-        output += abs(np.sign(0.5 * 1 - short_time_energy(el, imie)) + 1)
-    
-    return output / N
+def low_short_time_energy_ratio(filename, imie):
 
-def energy_entropy(imie, K):
-    all_wav_files = read_all_wav_files(imie)
+    samplerate, data = read_wav(filename, imie)
+    stes = short_time_energy(filename, imie)
+    output = 0
+    if len(stes) <= 1 / LEN_OF_FRAME:
+        avg_ste = statistics.mean(stes)
+
+        for i in range(len(stes)):
+            output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
+
+        return output / 2 * len(stes)
+
+    else:
+        number_of_frames_in_second = int(1 / LEN_OF_FRAME)
+        half_of_frames_in_second =  int(number_of_frames_in_second  / 2)
+
+        avg_ste = statistics.mean(stes[0:number_of_frames_in_second])
+
+        for i in range(half_of_frames_in_second):
+            output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
+        for i in range(half_of_frames_in_second, len(stes) - half_of_frames_in_second):
+            avg_ste = statistics.mean(stes[i - half_of_frames_in_second: i + half_of_frames_in_second])
+            output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
+        avg_ste = statistics.mean(stes[(len(stes)-number_of_frames_in_second):len(stes)])
+
+        for i in range(len(stes) - half_of_frames_in_second, len(stes)):
+            output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
+
+    return output / (2 * len(stes))
+
+def energy_entropy(filename, imie, K):
+    all_wav_files = read_wav(imie)
     total_energy = energy_data(np.concatenate(all_wav_files[1]))
-    
+
     output = 0
     for frame in all_wav_files[1]:
         frame_splited = np.array_split(ary = frame, indices_or_sections = K)
         for segment in frame_splited:
             normalized_energy = energy_data(segment) / total_energy
             output -= (normalized_energy ** 2) * math.log2(normalized_energy ** 2)
-    
+
     return output
 
 
-def standard_deviation_of_zcr(imie):
-    all_wav_files = files_imie(imie)
-    
+def standard_deviation_of_zcr(filename, imie):
+    all_wav_files = read_wav(imie)
+
     list_of_zcrs = [zero_crossing_rate(file, imie) for file in all_wav_files]
 
     return np.std(list_of_zcrs)
 
 #TODO
-def high_zero_crossing_rate_ratio(imie):
-    all_wav_files = files_imie(imie)
+def high_zero_crossing_rate_ratio(filename, imie):
+    all_wav_files = read_wav(imie)
 
     output = 0
     for frame in all_wav_files:
         output += np.sign(zero_crossing_rate(frame, imie) - 1.5 * 1) + 1
-    
+
     return output / (2 * len(all_wav_files))
