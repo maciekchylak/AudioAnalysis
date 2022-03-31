@@ -84,13 +84,15 @@ def fundemental_frequency(filename, imie):
     samplerate, data= read_wav(filename,imie)
     fundemental_frequency=[0 for i in range(len(data))]
     for j,frame in enumerate(data):
-        auto_korelation=[0 for i in range(1,len(frame))]
-        for l in range(1,len(frame)):
+        if len(frame)<50:
+            continue
+        auto_korelation=[0 for i in range(50,len(frame))]
+        for l in range(50,len(frame)):
             for i in range(len(frame)-l):
-                auto_korelation[l-1]+=frame[i]*frame[i+l]
+                auto_korelation[l-50]+=frame[i]*frame[i+l]
 
 
-        fundemental_frequency[j]=round(1/((auto_korelation.index(max(auto_korelation)))+1),3)
+        fundemental_frequency[j]=1/(((auto_korelation.index(max(auto_korelation)))+50)/samplerate)
 
     return fundemental_frequency
 
