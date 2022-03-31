@@ -14,7 +14,7 @@ def flatten(t):
 
 ### Read all filenames
 path_m = './samples/Maciej_Chylak/Znormalizowane'
-path_d = './samples/speaker_18/Znormalizowane'
+path_d = './samples/Dawid_Janus/Znormalizowane'
 
 all_filenames_m = [file for file in listdir(path_m) if isfile(join(path_m, file))]
 all_filenames_d = [file for file in listdir(path_d) if isfile(join(path_d, file))]
@@ -41,7 +41,7 @@ for file in all_filenames_m:
     samplerate_dict[key_dict] = samplerate
 
 for file in all_filenames_d:
-    key_dict = 'speaker_18_' + file
+    key_dict = 'Dawid_' + file
     samplerate, data =  wavfile.read(path_d + '/' + file)
     size_of_frame = int(LEN_OF_FRAME * samplerate)
 

@@ -1,4 +1,5 @@
 from copy import copy
+import os
 from os import scandir
 import sys
 from tkinter.font import BOLD
@@ -9,6 +10,8 @@ matplotlib.use('Qt5Agg')
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QUrl, QFileInfo
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib.collections import LineCollection
@@ -101,11 +104,6 @@ class PlotMenu(QWidget):
         if self.imie == 'Dawid':
             self.choose_file.addItems(all_filenames_d)
 
-        self.choose_type = QComboBox()
-        if self.imie == 'Maciej':
-            self.choose_file.addItems(['cisza', 'dźwięczne/bezdźwięczne'])
-
-
         self.main_plot = QWidget()
         self.main_plot_layout = QGridLayout()
 
@@ -117,15 +115,44 @@ class PlotMenu(QWidget):
         button_back.clicked.connect(self.go_back)
         self.back_layout = QHBoxLayout()
 
+        self.music_play = QPushButton('Play', clicked = self.play_audio_file)
+        self.volume_up = QPushButton('+', clicked = self.volume_up)
+        self.volume_down = QPushButton('-', clicked = self.volume_down)
+        self.player = QMediaPlayer()
 
         self.back_layout.addWidget(self.choose_file)
-        self.back_layout.addStretch(6)
+        self.back_layout.addStretch(1)
+        self.back_layout.addWidget(self.volume_up)
+        self.back_layout.addWidget(self.music_play)
+        self.back_layout.addWidget(self.volume_down)
+        self.back_layout.addStretch(2)
         self.back_layout.addWidget(button_back)
 
         self.main_plot_layout.addLayout(self.back_layout, 1, 0)
 
         self.main_plot.setLayout(self.main_plot_layout)
         self.tabs.addTab(self.main_plot, 'Waveform')
+
+    def volume_up(self):
+        current_volume = self.player.volume()
+        print(current_volume)
+        self.player.setVolume(current_volume + 5)
+
+    def volume_down(self):
+        current_volume = self.player.volume()
+        print(current_volume)
+        self.player.setVolume(current_volume - 5)
+
+    def play_audio_file(self):
+        if self.imie == 'Maciej':
+            path = './samples/Maciej_Chylak/Znormalizowane/' + str(self.choose_file.currentText())
+        elif self.imie == 'Dawid':
+            path = './samples/speaker_18/Znormalizowane/' + str(self.choose_file.currentText())
+        print(os.getcwd())
+        url = QUrl.fromLocalFile(QFileInfo(path).absoluteFilePath())
+        content = QMediaContent(url)
+        self.player.setMedia(content)
+        self.player.play()
 
     def plot_generate(self):
         self.plot_toolbar_widget = QWidget()

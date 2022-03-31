@@ -15,10 +15,9 @@ def read_wav(filename, imie):
     if imie == 'Maciej':
         key_dict = 'Maciej_' + filename
     elif imie == 'Dawid':
-        key_dict = 'speaker_18_' + filename
+        key_dict = 'Dawid_' + filename
     else:
         return None
-
     return samplerate_dict[key_dict], data_dict[key_dict]
 
 def read_wav_clip(filename, imie):
@@ -33,7 +32,6 @@ def volume(filename, imie):
         for sample in frame:
             volume += float(sample) ** 2
         output.append(math.sqrt(volume / len(frame)))
-    print(output)
     return [(el - min(output)) / (max(output) - min(output)) for el in output]
 
 
