@@ -15,7 +15,7 @@ def read_wav(filename, imie):
     if imie == 'Maciej':
         key_dict = 'Maciej_' + filename
     elif imie == 'Dawid':
-        key_dict = 'Dawid_' + filename
+        key_dict = 'speaker_18_' + filename
     else:
         return None
 
@@ -32,8 +32,8 @@ def volume(filename, imie):
         volume = 0
         for sample in frame:
             volume += float(sample) ** 2
-        output.append(math.sqrt(volume) / len(frame))
-
+        output.append(math.sqrt(volume / len(frame)))
+    print(output)
     return [(el - min(output)) / (max(output) - min(output)) for el in output]
 
 
@@ -58,11 +58,12 @@ def zero_crossing_rate(filename, imie):
         output.append(int((zero_crossing_rate * samplerate / (len(frame) * 2))))
     return output
 
-def silent_ratio(filename, imie):
+def silent_voiceless_ratio(filename, imie):
     v = volume(filename, imie)
     zcr = zero_crossing_rate(filename, imie)
-
-    return [1 if v[i] < 0.02 and zcr[i] < 300 else 0 for i in range(len(v))]
+    print(v)
+    print(zcr)
+    return [1 if v[i] >= 0.08 else (0 if v[i] < 0.1 and zcr[i] < 4000 else 0.5) for i in range(len(v))]
 
 def autocorelation(data, l):
     output = 0
@@ -78,13 +79,17 @@ def average_magnitude_difference_function(data, l):
 
     return output
 
-#TODO
 def fundemental_frequency(filename, imie):
 
     samplerate, data= read_wav(filename,imie)
     fundemental_frequency=[0 for i in range(len(data))]
     for j,frame in enumerate(data):
+<<<<<<< HEAD
         if len(frame)<50:
+=======
+        if len(frame) < 50:
+            del fundemental_frequency[-1]
+>>>>>>> 6e8507426360f4b28e88eb401460f18cf5fa4e7f
             continue
         auto_korelation=[0 for i in range(50,len(frame))]
         for l in range(50,len(frame)):
@@ -153,7 +158,7 @@ def energy_entropy(filename, imie, K):
         energy_segment = [energy_data(segment) for segment in frame_splited]
         energy_segment_norm = [energy / max(energy_segment) for energy in energy_segment]
         for energy in energy_segment_norm:
-            output -= (energy ** 2) * math.log2(energy ** 2)
+            output -= (energy ** 2) * math.log2(energy ** 2 + 0.0001)
 
     return output
 
