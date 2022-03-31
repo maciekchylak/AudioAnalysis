@@ -1,8 +1,8 @@
+from copy import copy
 from os import scandir
 import sys
 from tkinter.font import BOLD
 import unicodedata
-from pip import main
 
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -11,6 +11,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+from matplotlib.collections import LineCollection
 
 
 from sound_functions import *
@@ -22,8 +23,8 @@ class MainMenu(QWidget):
         self.interface()
 
     def interface(self):
-        self.resize(size, size)
-        
+        self.resize(SIZE, SIZE)
+
         title = QLabel('Projekt 1', self)
         title.setFont(QFont('Peyo', 30))
         title.setAlignment(QtCore.Qt.AlignCenter)
@@ -65,19 +66,19 @@ class MainMenu(QWidget):
         self.dialog = PlotMenu('Maciej')
         self.close()
         self.dialog.show()
-    
+
     def on_button_clicked_dawid(self):
         self.dialog = PlotMenu('Dawid')
         self.close()
         self.dialog.show()
-        
+
 
 class PlotMenu(QWidget):
-    def __init__(self, imie = 'Maciej', parent = None): 
+    def __init__(self, imie = 'Maciej', parent = None):
         super().__init__(parent)
         self.imie = imie
 
-        self.resize(size, size)
+        self.resize(SIZE, SIZE)
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -93,13 +94,13 @@ class PlotMenu(QWidget):
         self.show()
 
     def plot(self):
-        
+
         self.choose_file = QComboBox()
         if self.imie == 'Maciej':
             self.choose_file.addItems(all_filenames_m)
         if self.imie == 'Dawid':
             self.choose_file.addItems(all_filenames_d)
-        
+
         self.main_plot = QWidget()
         self.main_plot_layout = QGridLayout()
 
@@ -119,7 +120,7 @@ class PlotMenu(QWidget):
 
         self.main_plot.setLayout(self.main_plot_layout)
         self.tabs.addTab(self.main_plot, 'Waveform')
-    
+
     def plot_generate(self):
         self.plot_toolbar_widget = QWidget()
         self.plot_toolbar_layout = QGridLayout()
@@ -132,7 +133,7 @@ class PlotMenu(QWidget):
         self.main_plot_layout.addWidget(self.plot_toolbar_widget, 0, 0)
 
     def features(self):
-        
+
         self.main_features = QWidget()
         self.main_features_layout = QGridLayout()
 
@@ -150,17 +151,17 @@ class PlotMenu(QWidget):
     def frame_statistics(self):
         self.frame = QWidget()
         self.frame_layout = QGridLayout()
+
         frame_title = QLabel()
         frame_title.setText('Features related with frame')
         frame_title.setAlignment(QtCore.Qt.AlignCenter)
         frame_title.setFont(QFont('Arial', 20))
 
         self.frame_layout.addWidget(frame_title, 0, 0, 1, 0)
-        self.frame_layout.addWidget(self.label_element('Volume', volume, self.choose_file.currentText()), 1, 0)
-        self.frame_layout.addWidget(self.label_element('Energy', energy, self.choose_file.currentText()), 1, 1)
-        self.frame_layout.addWidget(self.label_element('STE', short_time_energy, self.choose_file.currentText()), 2, 0)
-        self.frame_layout.addWidget(self.label_element('ZCR', zero_crossing_rate, self.choose_file.currentText()), 2, 1)
-        self.frame_layout.addWidget(self.label_element('Fundamental Frequency', short_time_energy, self.choose_file.currentText()), 3, 0, 1, 2)
+        self.frame_layout.addWidget(self.plot_of_feature(self.choose_file.currentText(), 'Volume'), 1, 0)
+        self.frame_layout.addWidget(self.plot_of_feature(self.choose_file.currentText(), 'STE'), 1, 1)
+        self.frame_layout.addWidget(self.plot_of_feature(self.choose_file.currentText(), 'ZCR'), 2, 0)
+        self.frame_layout.addWidget(self.plot_of_feature(self.choose_file.currentText(), 'FF'), 2, 1)
         self.frame.setLayout(self.frame_layout)
 
         self.main_features_layout.addWidget(self.frame, 0, 0)
@@ -195,12 +196,10 @@ class PlotMenu(QWidget):
         label.setFont(QFont('Arial', 12, weight=100))
 
         output = QLabel()
-        if frame and K == -1:
+        if not frame and K == -1:
             output.setText(str(function(filename, self.imie)))
-        elif not frame and K == -1:
-            output.setText(str(function(self.imie)))
         elif K != -1:
-            output.setText(str(function(self.imie, K)))
+            output.setText(str(function(filename, self.imie, K)))
         output.setAlignment(QtCore.Qt.AlignCenter)
         output.setFont(QFont('Arial', 8))
 
@@ -213,7 +212,7 @@ class PlotMenu(QWidget):
 
     def generate_plots_statistics(self, _):
 
-        self.main_plot_layout.removeWidget(self.plot_toolbar_widget)     
+        self.main_plot_layout.removeWidget(self.plot_toolbar_widget)
         self.plot_generate()
 
         self.main_features_layout.removeWidget(self.frame)
@@ -221,15 +220,77 @@ class PlotMenu(QWidget):
 
 
     def waveform(self, filename):
-        samplerate , data = read_wav(filename, self.imie)
+        samplerate , data = read_wav_clip(filename, self.imie)
         length = len(data) / samplerate
-        time = np.linspace(0., length, data.shape[0])
+        time = np.linspace(0, length, len(data))
         sc = MplCanvas(self, width=5, height=4, dpi=100)
-        sc.axes.plot(time, data)
+
+        pomoc = copy(time)
+        pomoc1 = copy(time)
+        x = self.color_silence(filename, self.imie)
+
+        for i in range(len(time)):
+            if x[i]==1:
+                pomoc[i]=None
+            else:
+                pomoc1[i]=None
+
+        sc.axes.plot(pomoc1, data, c='red')
+        sc.axes.plot(pomoc, data, c='blue')
 
         toolbar = NavigationToolbar(sc, self)
 
         return sc, toolbar
+
+    def plot_of_feature(self, filename,  feature_name):
+
+        plot_label = QLabel()
+        if feature_name == 'Volume':
+            y = volume(filename, self.imie)
+            plot_label.setText('Volume / number of frame')
+        if feature_name == 'STE':
+            y = short_time_energy(filename, self.imie)
+            plot_label.setText('STE / number of frame')
+        if feature_name == 'ZCR':
+            y = zero_crossing_rate(filename, self.imie)
+            plot_label.setText('ZCR / number of frame')
+        if feature_name == 'FF':
+            y = fundemental_frequency(filename, self.imie)
+            plot_label.setText('Fundamental Frequency / number of frame')
+
+        plot_label.setAlignment(QtCore.Qt.AlignCenter)
+        plot_label.setFont(QFont('Arial', 12, weight=100))
+
+        time = np.linspace(1, len(y), len(y))
+        sc = MplCanvas(self, width=4, height=3, dpi=100)
+
+        sc.axes.plot(time, y)
+
+        toolbar = NavigationToolbar(sc, self)
+
+
+
+        plot_toolbar_widget = QWidget()
+        plot_toolbar_layout = QGridLayout()
+
+        plot_toolbar_layout.addWidget(plot_label, 0, 0)
+        plot_toolbar_layout.addWidget(toolbar, 1, 0)
+        plot_toolbar_layout.addWidget(sc, 2, 0)
+        plot_toolbar_widget.setLayout(plot_toolbar_layout)
+
+        return plot_toolbar_widget
+
+    def color_silence(self, filename, imie):
+
+        samplerate, data = read_wav(filename,imie)
+        list_of_silence = []
+        list_of_silent_frame = silent_ratio(filename,imie)
+        for i,ramka in enumerate(data):
+            pomocnicza=list_of_silent_frame[i]
+            for j in range(len(ramka)):
+                list_of_silence.append(pomocnicza)
+
+        return list_of_silence
 
     def go_back(self):
         self.back = MainMenu()
@@ -243,7 +304,7 @@ class MplCanvas(FigureCanvasQTAgg):
         super(MplCanvas, self).__init__(fig)
 
 if __name__ == '__main__':
-    
+
     app = QApplication(sys.argv)
     main_menu = MainMenu()
     sys.exit(app.exec_())

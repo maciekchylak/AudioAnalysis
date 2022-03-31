@@ -36,12 +36,6 @@ def volume(filename, imie):
 
     return [(el - min(output)) / (max(output) - min(output)) for el in output]
 
-def energy(filename, imie):
-    _, data = read_wav(filename, imie)
-    output = 0
-    for el in data:
-        output += float(el) ** 2
-    return output
 
 def energy_data(data):
     output = 0
@@ -68,7 +62,7 @@ def silent_ratio(filename, imie):
     v = volume(filename, imie)
     zcr = zero_crossing_rate(filename, imie)
 
-    return [1 if v[i] < 0.02 and zcr[i] < 200 else 0 for i in range(len(v))]
+    return [1 if v[i] < 0.02 and zcr[i] < 300 else 0 for i in range(len(v))]
 
 def autocorelation(data, l):
     output = 0
@@ -85,8 +79,20 @@ def average_magnitude_difference_function(data, l):
     return output
 
 #TODO
-def fundemental_frequency(data, filename):
-    pass
+def fundemental_frequency(filename, imie):
+
+    samplerate, data= read_wav(filename,imie)
+    fundemental_frequency=[0 for i in range(len(data))]
+    for j,frame in enumerate(data):
+        auto_korelation=[0 for i in range(1,len(frame))]
+        for l in range(1,len(frame)):
+            for i in range(len(frame)-l):
+                auto_korelation[l-1]+=frame[i]*frame[i+l]
+
+
+        fundemental_frequency[j]=round(1/((auto_korelation.index(max(auto_korelation)))+1),3)
+
+    return fundemental_frequency
 
 
 ### Clip level functions
@@ -118,8 +124,6 @@ def low_short_time_energy_ratio(filename, imie):
         for i in range(len(stes)):
             output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
 
-        return output / 2 * len(stes)
-
     else:
         number_of_frames_in_second = int(1 / LEN_OF_FRAME)
         half_of_frames_in_second =  int(number_of_frames_in_second  / 2)
@@ -139,32 +143,50 @@ def low_short_time_energy_ratio(filename, imie):
     return output / (2 * len(stes))
 
 def energy_entropy(filename, imie, K):
-    all_wav_files = read_wav(imie)
-    total_energy = energy_data(np.concatenate(all_wav_files[1]))
+    samplerate, data = read_wav(filename, imie)
 
     output = 0
-    for frame in all_wav_files[1]:
+    for frame in data:
         frame_splited = np.array_split(ary = frame, indices_or_sections = K)
-        for segment in frame_splited:
-            normalized_energy = energy_data(segment) / total_energy
-            output -= (normalized_energy ** 2) * math.log2(normalized_energy ** 2)
+        energy_segment = [energy_data(segment) for segment in frame_splited]
+        energy_segment_norm = [energy / max(energy_segment) for energy in energy_segment]
+        for energy in energy_segment_norm:
+            output -= (energy ** 2) * math.log2(energy ** 2)
 
     return output
 
 
 def standard_deviation_of_zcr(filename, imie):
-    all_wav_files = read_wav(imie)
+    data = zero_crossing_rate(filename, imie)
+    return np.std(data)
 
-    list_of_zcrs = [zero_crossing_rate(file, imie) for file in all_wav_files]
-
-    return np.std(list_of_zcrs)
-
-#TODO
 def high_zero_crossing_rate_ratio(filename, imie):
-    all_wav_files = read_wav(imie)
 
+    samplerate, data = read_wav(filename, imie)
+    zcrs = zero_crossing_rate(filename, imie)
     output = 0
-    for frame in all_wav_files:
-        output += np.sign(zero_crossing_rate(frame, imie) - 1.5 * 1) + 1
+    if len(zcrs) <= 1 / LEN_OF_FRAME:
+        avg_zcr = statistics.mean(zcrs)
 
-    return output / (2 * len(all_wav_files))
+        for i in range(len(zcrs)):
+            output += abs(np.sign(zcrs[i] - 1.5 * avg_zcr) + 1)
+
+    else:
+        number_of_frames_in_second = int(1 / LEN_OF_FRAME)
+        half_of_frames_in_second =  int(number_of_frames_in_second  / 2)
+
+        avg_zcr = statistics.mean(zcrs[0:number_of_frames_in_second])
+
+        for i in range(half_of_frames_in_second):
+            output += abs(np.sign(zcrs[i] - 1.5 * avg_zcr) + 1)
+
+        for i in range(half_of_frames_in_second, len(zcrs) - half_of_frames_in_second):
+            avg_zcr = statistics.mean(zcrs[i - half_of_frames_in_second: i + half_of_frames_in_second])
+            output += abs(np.sign(zcrs[i] - 1.5 * avg_zcr) + 1)
+
+        avg_zcr = statistics.mean(zcrs[(len(zcrs)-number_of_frames_in_second):len(zcrs)])
+
+        for i in range(len(zcrs) - half_of_frames_in_second, len(zcrs)):
+            output += abs(np.sign(zcrs[i] - 1.5 * avg_zcr) + 1)
+
+    return output / (2 * len(zcrs))
