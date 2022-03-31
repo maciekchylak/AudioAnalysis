@@ -101,6 +101,11 @@ class PlotMenu(QWidget):
         if self.imie == 'Dawid':
             self.choose_file.addItems(all_filenames_d)
 
+        self.choose_type = QComboBox()
+        if self.imie == 'Maciej':
+            self.choose_file.addItems(['cisza', 'dźwięczne/bezdźwięczne'])
+
+
         self.main_plot = QWidget()
         self.main_plot_layout = QGridLayout()
 
@@ -111,6 +116,7 @@ class PlotMenu(QWidget):
         button_back = QPushButton('Back', self)
         button_back.clicked.connect(self.go_back)
         self.back_layout = QHBoxLayout()
+
 
         self.back_layout.addWidget(self.choose_file)
         self.back_layout.addStretch(6)
@@ -225,18 +231,26 @@ class PlotMenu(QWidget):
         time = np.linspace(0, length, len(data))
         sc = MplCanvas(self, width=5, height=4, dpi=100)
 
-        pomoc = copy(time)
-        pomoc1 = copy(time)
+        pomoc0 = copy(time)
+        pomoc05 = copy(time)
+        pomoc1= copy(time)
+
         x = self.color_silence(filename, self.imie)
 
         for i in range(len(time)):
             if x[i]==1:
-                pomoc[i]=None
+                pomoc0[i]=None
+                pomoc05[i]=None
+            elif  x[i]==0.5:
+                pomoc1[i]=None
+                pomoc0[i]=None
             else:
                 pomoc1[i]=None
+                pomoc05[i]=None
 
-        sc.axes.plot(pomoc1, data, c='red')
-        sc.axes.plot(pomoc, data, c='blue')
+        sc.axes.plot(pomoc0, data, c='black')
+        sc.axes.plot(pomoc05, data, c='green')
+        sc.axes.plot(pomoc1, data, c='blue')
 
         toolbar = NavigationToolbar(sc, self)
 
@@ -284,7 +298,7 @@ class PlotMenu(QWidget):
 
         samplerate, data = read_wav(filename,imie)
         list_of_silence = []
-        list_of_silent_frame = silent_ratio(filename,imie)
+        list_of_silent_frame = silent_voiceless_ratio(filename,imie)
         for i,ramka in enumerate(data):
             pomocnicza=list_of_silent_frame[i]
             for j in range(len(ramka)):
