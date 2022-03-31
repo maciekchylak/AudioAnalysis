@@ -84,12 +84,8 @@ def fundemental_frequency(filename, imie):
     samplerate, data= read_wav(filename,imie)
     fundemental_frequency=[0 for i in range(len(data))]
     for j,frame in enumerate(data):
-<<<<<<< HEAD
-        if len(frame)<50:
-=======
         if len(frame) < 50:
             del fundemental_frequency[-1]
->>>>>>> 6e8507426360f4b28e88eb401460f18cf5fa4e7f
             continue
         auto_korelation=[0 for i in range(50,len(frame))]
         for l in range(50,len(frame)):
