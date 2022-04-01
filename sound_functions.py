@@ -109,10 +109,6 @@ def volume_dynamic_range(filename, imie):
 
     return (max(volumes) - min(volumes)) / max(volumes)
 
-#TODO
-def volume_undulation():
-    pass
-
 ### Energy level functions
 def low_short_time_energy_ratio(filename, imie):
 
@@ -142,6 +138,10 @@ def low_short_time_energy_ratio(filename, imie):
             output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
 
     return output / (2 * len(stes))
+
+def is_music(filename, imie):
+    return low_short_time_energy_ratio(filename, imie) <= 0.15
+
 
 def energy_entropy(filename, imie, K):
     samplerate, data = read_wav(filename, imie)

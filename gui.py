@@ -210,7 +210,7 @@ class PlotMenu(QWidget):
         self.clip_layout.addWidget(clip_title, 4, 0, 1, 0)
         self.clip_layout.addWidget(self.label_element('VSTD', VSTD, self.choose_file.currentText(), False), 5, 0)
         self.clip_layout.addWidget(self.label_element('VDR', volume_dynamic_range, self.choose_file.currentText(), False), 5, 1)
-        self.clip_layout.addWidget(self.label_element('VU', volume_dynamic_range, self.choose_file.currentText(), False), 5, 2)
+        self.clip_layout.addWidget(self.label_element('IS MUSIC?', is_music, self.choose_file.currentText(), False), 5, 2)
         self.clip_layout.addWidget(self.label_element('LSTER', low_short_time_energy_ratio, self.choose_file.currentText(), False), 6, 0)
         self.clip_layout.addWidget(self.label_element('ZSTD', standard_deviation_of_zcr, self.choose_file.currentText(), False), 6, 1)
         self.clip_layout.addWidget(self.label_element('HZCRR', high_zero_crossing_rate_ratio, self.choose_file.currentText(), False), 6, 2)
@@ -275,9 +275,12 @@ class PlotMenu(QWidget):
                 pomoc1[i]=None
                 pomoc05[i]=None
 
-        sc.axes.plot(pomoc0, data, c='black')
-        sc.axes.plot(pomoc05, data, c='green')
-        sc.axes.plot(pomoc1, data, c='blue')
+        sc.axes.plot(pomoc0, data, c='black', label='silcence')
+        sc.axes.legend()
+        sc.axes.plot(pomoc05, data, c='green', label='voiceless')
+        sc.axes.legend()
+        sc.axes.plot(pomoc1, data, c='blue', label='voice')
+        sc.axes.legend()
 
         toolbar = NavigationToolbar(sc, self)
 
