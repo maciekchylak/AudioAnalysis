@@ -40,13 +40,18 @@ class MainMenu(QWidget):
         button_maciej.setFont(QFont('Arial', 10))
         button_dawid = QPushButton('Dawid', self)
         button_dawid.setFont(QFont('Arial', 10))
+        button_others = QPushButton('Others', self)
+        button_others.setFont(QFont('Arial', 10))
+
         button_maciej.clicked.connect(self.on_button_clicked_maciej)
         button_dawid.clicked.connect(self.on_button_clicked_dawid)
+        button_others.clicked.connect(self.on_button_clicked_others)
 
 
         button_layout = QGridLayout()
         button_layout.addWidget(button_maciej, 0, 0, alignment=QtCore.Qt.AlignTop)
         button_layout.addWidget(button_dawid, 0, 1, alignment=QtCore.Qt.AlignTop)
+        button_layout.addWidget(button_others, 0, 2, alignment=QtCore.Qt.AlignTop)
 
         button_exit = QPushButton('Exit', self)
         button_exit.clicked.connect(app.exit)
@@ -72,6 +77,10 @@ class MainMenu(QWidget):
 
     def on_button_clicked_dawid(self):
         self.dialog = PlotMenu('Dawid')
+        self.close()
+        self.dialog.show()
+    def on_button_clicked_others(self):
+        self.dialog = PlotMenu('Others')
         self.close()
         self.dialog.show()
 
@@ -103,6 +112,8 @@ class PlotMenu(QWidget):
             self.choose_file.addItems(all_filenames_m)
         if self.imie == 'Dawid':
             self.choose_file.addItems(all_filenames_d)
+        if self.imie == 'Others':
+            self.choose_file.addItems(all_filenames_o)
 
         self.main_plot = QWidget()
         self.main_plot_layout = QGridLayout()
@@ -148,7 +159,9 @@ class PlotMenu(QWidget):
             path = './samples/Maciej_Chylak/Znormalizowane/' + str(self.choose_file.currentText())
         elif self.imie == 'Dawid':
             path = './samples/Dawid_Janus/Znormalizowane/' + str(self.choose_file.currentText())
-        print(os.getcwd())
+        elif self.imie == 'Others':
+            path = './samples/Others' + str(self.choose_file.currentText())
+
         url = QUrl.fromLocalFile(QFileInfo(path).absoluteFilePath())
         content = QMediaContent(url)
         self.player.setMedia(content)
