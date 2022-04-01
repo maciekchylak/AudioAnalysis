@@ -147,7 +147,7 @@ class PlotMenu(QWidget):
         if self.imie == 'Maciej':
             path = './samples/Maciej_Chylak/Znormalizowane/' + str(self.choose_file.currentText())
         elif self.imie == 'Dawid':
-            path = './samples/speaker_18/Znormalizowane/' + str(self.choose_file.currentText())
+            path = './samples/Dawid_Janus/Znormalizowane/' + str(self.choose_file.currentText())
         print(os.getcwd())
         url = QUrl.fromLocalFile(QFileInfo(path).absoluteFilePath())
         content = QMediaContent(url)
