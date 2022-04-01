@@ -160,7 +160,7 @@ class PlotMenu(QWidget):
         elif self.imie == 'Dawid':
             path = './samples/Dawid_Janus/Znormalizowane/' + str(self.choose_file.currentText())
         elif self.imie == 'Others':
-            path = './samples/Others' + str(self.choose_file.currentText())
+            path = './samples/Others/' + str(self.choose_file.currentText())
 
         url = QUrl.fromLocalFile(QFileInfo(path).absoluteFilePath())
         content = QMediaContent(url)
@@ -293,8 +293,9 @@ class PlotMenu(QWidget):
 
         sc.axes.plot(pomoc0, data, c='black', label='silcence')
         sc.axes.legend()
-        sc.axes.plot(pomoc05, data, c='green', label='voiceless')
-        sc.axes.legend()
+        if self.imie != 'Others':
+            sc.axes.plot(pomoc05, data, c='green', label='voiceless')
+            sc.axes.legend()
         sc.axes.plot(pomoc1, data, c='blue', label='voice')
         sc.axes.legend()
 

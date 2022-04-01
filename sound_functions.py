@@ -64,7 +64,11 @@ def silent_voiceless_ratio(filename, imie):
     zcr = zero_crossing_rate(filename, imie)
     print(v)
     print(zcr)
-    return [1 if v[i] >= 0.1 else (0 if v[i] < 0.1 and zcr[i] < 3000 else 0.5) for i in range(len(v))]
+    if imie == 'Maciej' or imie == 'Dawid':
+        output = [1 if v[i] >= 0.1 else (0 if v[i] < 0.1 and zcr[i] < 3000 else 0.5) for i in range(len(v))]
+    else:
+        output = [1 if v[i] >= 0.1 else 0 for i in range(len(v))]
+    return output
 
 def autocorelation(data, l):
     output = 0
