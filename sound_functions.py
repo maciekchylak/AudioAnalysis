@@ -61,7 +61,7 @@ def silent_voiceless_ratio(filename, imie):
     zcr = zero_crossing_rate(filename, imie)
     print(v)
     print(zcr)
-    return [1 if v[i] >= 0.08 else (0 if v[i] < 0.1 and zcr[i] < 4000 else 0.5) for i in range(len(v))]
+    return [1 if v[i] >= 0.1 else (0 if v[i] < 0.1 and zcr[i] < 3000 else 0.5) for i in range(len(v))]
 
 def autocorelation(data, l):
     output = 0
@@ -119,29 +119,28 @@ def low_short_time_energy_ratio(filename, imie):
         avg_ste = statistics.mean(stes)
 
         for i in range(len(stes)):
-            output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
+            output += np.sign(0.5 * avg_ste - stes[i]) + 1
 
     else:
-        number_of_frames_in_second = int(1 / LEN_OF_FRAME)
+        number_of_frames_in_second = int((1 / LEN_OF_FRAME) / 5)
         half_of_frames_in_second =  int(number_of_frames_in_second  / 2)
 
         avg_ste = statistics.mean(stes[0:number_of_frames_in_second])
 
         for i in range(half_of_frames_in_second):
-            output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
+            output += np.sign(0.5 * avg_ste - stes[i]) + 1
         for i in range(half_of_frames_in_second, len(stes) - half_of_frames_in_second):
             avg_ste = statistics.mean(stes[i - half_of_frames_in_second: i + half_of_frames_in_second])
-            output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
-        avg_ste = statistics.mean(stes[(len(stes)-number_of_frames_in_second):len(stes)])
+            output += np.sign(0.5 * avg_ste - stes[i]) + 1
 
+        avg_ste = statistics.mean(stes[(len(stes)-number_of_frames_in_second):len(stes)])
         for i in range(len(stes) - half_of_frames_in_second, len(stes)):
-            output += abs(np.sign(0.5 * avg_ste - stes[i]) + 1)
+            output += np.sign(0.5 * avg_ste - stes[i]) + 1
 
     return output / (2 * len(stes))
 
 def is_music(filename, imie):
-    return low_short_time_energy_ratio(filename, imie) <= 0.15
-
+    return low_short_time_energy_ratio(filename, imie) <= 0.3
 
 def energy_entropy(filename, imie, K):
     samplerate, data = read_wav(filename, imie)

@@ -251,6 +251,9 @@ class PlotMenu(QWidget):
         self.main_features_layout.removeWidget(self.frame)
         self.frame_statistics()
 
+        self.main_features_layout.removeWidget(self.clip)
+        self.clip_statistics()
+
 
     def waveform(self, filename):
         samplerate , data = read_wav_clip(filename, self.imie)
